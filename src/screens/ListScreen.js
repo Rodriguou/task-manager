@@ -12,6 +12,11 @@ export default function ListScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('createdAt'); // Padrão: data de criação
 
+  // Estados dos Filtros Múltiplos
+  const [showFilters, setShowFilters] = useState(false);
+  const [activePriorities, setActivePriorities] = useState([]);
+  const [activeStatuses, setActiveStatuses] = useState([]);
+
   // Carrega as tarefas do banco de dados (SQLite ou AsyncStorage)
   const loadTasks = async () => {
     try {
@@ -59,19 +64,44 @@ export default function ListScreen({ navigation }) {
     loadTasks();
   };
 
-  // Lógica de Ordenação
+  // Funções para alternar os filtros de forma múltipla
+  const togglePriorityFilter = (priority) => {
+    setActivePriorities(prev => 
+      prev.includes(priority) ? prev.filter(p => p !== priority) : [...prev, priority]
+    );
+  };
+
+  const toggleStatusFilter = (status) => {
+    setActiveStatuses(prev => 
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+    );
+  };
+
+  // Lógica combinada de Pesquisa + Filtros Múltiplos + Ordenação Dupla
   const priorityOrder = { 'alta': 1, 'média': 2, 'baixa': 3 };
   
   const processedTasks = tasks
+    // 1. Pesquisa por texto
     .filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    // 2. Filtro de Prioridade (Se a lista estiver vazia, ignora o filtro e mostra tudo)
+    .filter(t => activePriorities.length === 0 || activePriorities.includes(t.priority))
+    // 3. Filtro de Status (Se a lista estiver vazia, ignora o filtro e mostra tudo)
+    .filter(t => activeStatuses.length === 0 || activeStatuses.includes(t.status))
+    // 4. Ordenação
     .sort((a, b) => {
       if (sortBy === 'priority') {
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
+        const pA = priorityOrder[a.priority];
+        const pB = priorityOrder[b.priority];
+        if (pA === pB) return b.id - a.id; 
+        return pA - pB;
       }
       if (sortBy === 'dueDate') {
-        return new Date(a.dueDate) - new Date(b.dueDate);
+        const dateA = new Date(a.dueDate).getTime();
+        const dateB = new Date(b.dueDate).getTime();
+        if (dateA === dateB) return b.id - a.id;
+        return dateA - dateB;
       }
-      return new Date(b.createdAt) - new Date(a.createdAt); // Padrão: Mais recentes primeiro
+      return b.id - a.id; // Padrão: criação
     });
 
   // Renderização de cada Card de Tarefa
@@ -111,7 +141,7 @@ export default function ListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Barra de Pesquisa */}
+      {/* Barra de Pesquisa com Ícone de Filtro */}
       <View style={styles.searchContainer}>
         <MaterialIcons name="search" size={20} color="#666" />
         <TextInput
@@ -120,7 +150,52 @@ export default function ListScreen({ navigation }) {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+        <TouchableOpacity 
+          style={styles.filterIconBtn}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <MaterialIcons 
+            name="filter-list" 
+            size={24} 
+            color={(activePriorities.length > 0 || activeStatuses.length > 0) ? '#195efc' : '#666'} 
+          />
+        </TouchableOpacity>
       </View>
+
+      {/* Painel Expansível de Filtros */}
+      {showFilters && (
+        <View style={styles.filterPanel}>
+          <Text style={styles.filterLabel}>Filtrar por Prioridade:</Text>
+          <View style={styles.filterRow}>
+            {['baixa', 'média', 'alta'].map(p => (
+              <TouchableOpacity
+                key={p}
+                style={[styles.filterChip, activePriorities.includes(p) && styles.filterChipActive]}
+                onPress={() => togglePriorityFilter(p)}
+              >
+                <Text style={[styles.filterChipText, activePriorities.includes(p) && styles.filterChipTextActive]}>
+                  {p.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.filterLabel}>Filtrar por Status:</Text>
+          <View style={styles.filterRow}>
+            {['Não iniciada', 'Em andamento', 'Concluída'].map(s => (
+              <TouchableOpacity
+                key={s}
+                style={[styles.filterChip, activeStatuses.includes(s) && styles.filterChipActive]}
+                onPress={() => toggleStatusFilter(s)}
+              >
+                <Text style={[styles.filterChipText, activeStatuses.includes(s) && styles.filterChipTextActive]}>
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Botões de Ordenação */}
       <View style={styles.sortContainer}>
@@ -188,8 +263,55 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     marginLeft: 10,
-    fontSize: 16
+    fontSize: 16,
+    outlineStyle: 'none'
   },
+  filterIconBtn: {
+    paddingHorizontal: 5
+  },
+  // Estilos do Painel de Filtros
+  filterPanel: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#D1DFFE'
+  },
+  filterLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000c36',
+    marginBottom: 8,
+    marginTop: 5
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 10
+  },
+  filterChip: { 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 15, 
+    backgroundColor: '#fff', 
+    borderWidth: 1, 
+    borderColor: '#D1DFFE' 
+  },
+  filterChipActive: {
+    backgroundColor: '#195efc',
+    borderColor: '#195efc'
+  },
+  filterChipText: {
+    fontSize: 11,
+    color: '#000c36'
+  },
+  filterChipTextActive: {
+    color: '#fff',
+    fontWeight: 'bold'
+  },
+  // Estilos de Ordenação
   sortContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -218,6 +340,7 @@ const styles = StyleSheet.create({
   sortTextActive: {
     color: '#fff'
   },
+  // Estilos do Card
   card: {
     backgroundColor: '#fff',
     padding: 15,
@@ -235,10 +358,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8
   },
-  taskTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000c36',
+  taskTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#000c36', 
     flex: 1,
     flexShrink: 1, // Garante que o texto vai quebrar a linha ou encolher se for muito grande
     marginRight: 10, // Dá um respiro para não encostar no badge
