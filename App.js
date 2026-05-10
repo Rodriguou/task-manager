@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -52,7 +52,9 @@ export default function App() {
         <Stack.Screen
           name="Form"
           component={FormScreen}
-          options={{ title: 'Nova Tarefa' }}
+          options={({ route }) => ({ 
+            title: route.params?.task ? 'Editar Tarefa' : 'Nova Tarefa' 
+          })}
         />
       </Stack.Navigator>
     </NavigationContainer>
