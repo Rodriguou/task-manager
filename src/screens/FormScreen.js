@@ -39,9 +39,19 @@ export default function FormScreen({ navigation, route }) {
 
   // Função de Validação e Salvamento
   const handleSave = async () => {
-    // 1. Validação de Nome Vazio
+    // 1. Validação de Nome Vazio e Limites
     if (!name.trim()) {
       showAlert('Atenção', 'O nome da tarefa é obrigatório.');
+      return;
+    }
+    
+    if (name.trim().length > 50) {
+      showAlert('Atenção', 'O nome da tarefa deve ter no máximo 50 caracteres.');
+      return;
+    }
+
+    if (description.length > 200) {
+      showAlert('Atenção', 'A descrição deve ter no máximo 200 caracteres.');
       return;
     }
 
@@ -63,10 +73,10 @@ export default function FormScreen({ navigation, route }) {
     try {
       if (editingTask) {
         // UPDATE (Editar)
-        await DatabaseService.updateTask(editingTask.id, name, description, priority, formattedDate);
+        await DatabaseService.updateTask(editingTask.id, name.trim(), description.trim(), priority, formattedDate);
       } else {
         // CREATE (Nova Tarefa)
-        await DatabaseService.addTask(name, description, priority, formattedDate);
+        await DatabaseService.addTask(name.trim(), description.trim(), priority, formattedDate);
       }
       
       // Volta para a tela de Lista após salvar
@@ -88,6 +98,7 @@ export default function FormScreen({ navigation, route }) {
           placeholder="Ex: Estudar React Native"
           value={name}
           onChangeText={setName}
+          maxLength={50} // Impede digitar além de 50 caracteres
         />
       </View>
 
@@ -101,7 +112,11 @@ export default function FormScreen({ navigation, route }) {
           numberOfLines={3}
           value={description}
           onChangeText={setDescription}
+          maxLength={200} // Impede digitar além de 200 caracteres
         />
+        <Text style={styles.counterText}>
+          {description.length}/200
+        </Text>
       </View>
 
       {/* PRIORIDADE */}
@@ -209,6 +224,12 @@ const styles = StyleSheet.create({
   textArea: {
     height: 80,
     textAlignVertical: 'top',
+  },
+  counterText: {
+    fontSize: 10,
+    color: '#666',
+    textAlign: 'right',
+    marginTop: 4,
   },
   dateText: {
     fontSize: 16,
