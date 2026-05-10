@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView } from 'react-native-gesture-handler';
 
 // Importação do Serviço de Banco de Dados
 import { DatabaseService } from '../database/DatabaseService';
@@ -174,7 +173,7 @@ export default function ListScreen({ navigation }) {
                 onPress={() => togglePriorityFilter(p)}
               >
                 <Text style={[styles.filterChipText, activePriorities.includes(p) && styles.filterChipTextActive]}>
-                  {p.toUpperCase()}
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -248,7 +247,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F6F9FE',
-    padding: 15
+    padding: 15,
+    ...(Platform.OS === 'web' ? { maxHeight: '100vh', overflow: 'hidden' } : {})
   },
   searchContainer: {
     flexDirection: 'row',
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
   fab: {
-    position: 'absolute',
+    ...(Platform.OS === 'web' ? { position: 'fixed' } : { position: 'absolute' }),
     bottom: 30,
     right: 30,
     backgroundColor: '#000c36',
