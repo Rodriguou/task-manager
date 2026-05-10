@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -28,11 +28,20 @@ export default function FormScreen({ navigation, route }) {
     }
   };
 
+  // Função auxiliar para exibir alertas na Web e no Mobile
+  const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   // Função de Validação e Salvamento
   const handleSave = async () => {
     // 1. Validação de Nome Vazio
     if (!name.trim()) {
-      Alert.alert('Atenção', 'O nome da tarefa é obrigatório.');
+      showAlert('Atenção', 'O nome da tarefa é obrigatório.');
       return;
     }
 
@@ -44,7 +53,7 @@ export default function FormScreen({ navigation, route }) {
     selectedDate.setHours(0, 0, 0, 0);
 
     if (!editingTask && selectedDate < today) {
-      Alert.alert('Atenção', 'A data limite não pode ser anterior ao dia de hoje.');
+      showAlert('Atenção', 'A data limite não pode ser anterior ao dia de hoje.');
       return;
     }
 
@@ -64,7 +73,7 @@ export default function FormScreen({ navigation, route }) {
       navigation.goBack();
     } catch (error) {
       console.error(error);
-      Alert.alert('Erro', 'Não foi possível salvar a tarefa.');
+      showAlert('Erro', 'Não foi possível salvar a tarefa.');
     }
   };
 

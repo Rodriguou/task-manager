@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -28,15 +28,24 @@ export default function ListScreen({ navigation }) {
     }, [])
   );
 
-  // Lógica de Deletar
+  // Lógica de Deletar (Híbrida)
   const handleDelete = (id) => {
-    Alert.alert('Excluir', 'Deseja realmente apagar esta tarefa?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Excluir', style: 'destructive', onPress: async () => {
-          await DatabaseService.deleteTask(id);
-          loadTasks();
-      }},
-    ]);
+    if (Platform.OS === 'web') {
+      // Exibe a caixa de confirmação nativa do navegador
+      const confirmed = window.confirm('Deseja realmente apagar esta tarefa?');
+      if (confirmed) {
+        DatabaseService.deleteTask(id).then(() => loadTasks());
+      }
+    } else {
+      // Exibe a caixa de confirmação nativa do celular (Android/iOS)
+      Alert.alert('Excluir', 'Deseja realmente apagar esta tarefa?', [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Excluir', style: 'destructive', onPress: async () => {
+            await DatabaseService.deleteTask(id);
+            loadTasks();
+        }},
+      ]);
+    }
   };
 
   // Lógica de Mudar Status (Ciclo: Não iniciada -> Em andamento -> Concluída)
@@ -163,7 +172,11 @@ export default function ListScreen({ navigation }) {
 import { ScrollView } from 'react-native-gesture-handler';
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F6F9FE', padding: 15 },
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F9FE',
+    padding: 15
+  },
   searchContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -174,30 +187,136 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D1DFFE'
   },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
-  sortContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
-  sortLabel: { fontSize: 12, fontWeight: 'bold', color: '#000c36', marginRight: 10 },
-  sortButton: { paddingHorizontal: 15, paddingVertical: 6, borderRadius: 20, backgroundColor: '#D1DFFE', marginRight: 8 },
-  sortButtonActive: { backgroundColor: '#195efc' },
-  sortText: { fontSize: 11, color: '#000c36' },
-  sortTextActive: { color: '#fff' },
-  card: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  taskTitle: { fontSize: 18, fontWeight: 'bold', color: '#000c36', flex: 1 },
-  priorityBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  badge_baixa: { backgroundColor: '#E8F5E9' },
-  badge_média: { backgroundColor: '#FFF3E0' },
-  badge_alta: { backgroundColor: '#FFEBEE' },
-  priorityText: { fontSize: 10, fontWeight: 'bold' },
-  taskDescription: { fontSize: 14, color: '#666', marginBottom: 12 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 12 },
-  dateInfo: { fontSize: 12, color: '#888' },
-  statusButton: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-  status_Nãoiniciada: { backgroundColor: '#eee' },
-  status_Emandamento: { backgroundColor: '#E3F2FD' },
-  status_Concluída: { backgroundColor: '#C8E6C9' },
-  statusButtonText: { fontSize: 11, fontWeight: 'bold' },
-  actionRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 20, marginTop: 10 },
-  fab: { position: 'absolute', bottom: 30, right: 30, backgroundColor: '#000c36', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#999' }
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16
+  },
+  sortContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15
+  },
+  sortLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000c36',
+    marginRight: 10
+  },
+  sortButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#D1DFFE',
+    marginRight: 8
+  },
+  sortButtonActive: {
+    backgroundColor: '#195efc'
+  },
+  sortText: {
+    fontSize: 11,
+    color: '#000c36'
+  },
+  sortTextActive: {
+    color: '#fff'
+  },
+  card: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8
+  },
+  taskTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000c36',
+    flex: 1
+  },
+  priorityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6
+  },
+  badge_baixa: {
+    backgroundColor: '#E8F5E9'
+  },
+  badge_média: {
+    backgroundColor: '#FFF3E0'
+  },
+  badge_alta: {
+    backgroundColor: '#FFEBEE'
+  },
+  priorityText: {
+    fontSize: 10,
+    fontWeight: 'bold'
+  },
+  taskDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 12
+  },
+  dateInfo: {
+    fontSize: 12,
+    color: '#888'
+  },
+  statusButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6
+  },
+  status_Nãoiniciada: {
+    backgroundColor: '#eee'
+  },
+  status_Emandamento: {
+    backgroundColor: '#E3F2FD'
+  },
+  status_Concluída: {
+    backgroundColor: '#C8E6C9'
+  },
+  statusButtonText: {
+    fontSize: 11,
+    fontWeight: 'bold'
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 20,
+    marginTop: 10
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    backgroundColor: '#000c36',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 50,
+    color: '#999'
+  }
 });
