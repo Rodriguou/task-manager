@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
 
 // Importação do nosso Serviço de Banco de Dados Híbrido
 import { DatabaseService } from './src/database/DatabaseService';
@@ -35,29 +37,34 @@ export default function App() {
 
   // Estrutura de Navegação
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="List"
-        screenOptions={{
-          headerStyle: { backgroundColor: '#000c36' }, // Cabeçalho azul escuro
-          headerTintColor: '#fff', // Texto branco
-          headerTitleStyle: { fontWeight: 'bold' },
-        }}
-      >
-        <Stack.Screen
-          name="List"
-          component={ListScreen}
-          options={{ title: 'Minhas Tarefas' }}
-        />
-        <Stack.Screen
-          name="Form"
-          component={FormScreen}
-          options={({ route }) => ({ 
-            title: route.params?.task ? 'Editar Tarefa' : 'Nova Tarefa' 
-          })}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* Força o Status Bar a ficar com texto claro e fundo azul escuro */}
+      <StatusBar style="light" backgroundColor="#000c36" />
+      
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="List"
+          screenOptions={{
+            headerStyle: { backgroundColor: '#000c36' }, // Cabeçalho azul escuro 
+            headerTintColor: '#fff', // Texto branco
+            headerTitleStyle: { fontWeight: 'bold' },
+          }}
+        >
+          <Stack.Screen
+            name="List"
+            component={ListScreen}
+            options={{ title: 'Minhas Tarefas' }}
+          />
+          <Stack.Screen
+            name="Form"
+            component={FormScreen}
+            options={({ route }) => ({ 
+              title: route.params?.task ? 'Editar Tarefa' : 'Nova Tarefa' 
+            })}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 
