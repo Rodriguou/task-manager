@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { ScrollView } from 'react-native-gesture-handler';
 
 // Importação do Serviço de Banco de Dados
 import { DatabaseService } from '../database/DatabaseService';
@@ -83,7 +84,7 @@ export default function ListScreen({ navigation }) {
         </View>
       </View>
       
-      <Text style={styles.taskDescription} numberOfLines={2}>
+      <Text style={styles.taskDescription}>
         {item.description || 'Sem descrição'}
       </Text>
 
@@ -168,9 +169,6 @@ export default function ListScreen({ navigation }) {
   );
 }
 
-// Estilos otimizados
-import { ScrollView } from 'react-native-gesture-handler';
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -241,12 +239,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000c36',
-    flex: 1
+    flex: 1,
+    flexShrink: 1, // Garante que o texto vai quebrar a linha ou encolher se for muito grande
+    marginRight: 10, // Dá um respiro para não encostar no badge
+    ...(Platform.OS === 'web' ? { wordBreak: 'break-word' } : {}) // Força quebra de palavras gigantes sem espaço na Web
   },
   priorityBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6
+    borderRadius: 6,
+    flexShrink: 0, // Impede terminantemente que o badge seja esmagado pelo título
   },
   badge_baixa: {
     backgroundColor: '#E8F5E9'
